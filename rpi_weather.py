@@ -21,8 +21,11 @@ class RpiWeather():
         self.matrix.append(Matrix8x8.Matrix8x8(address=0x72, busnum=1))
         self.matrix.append(Matrix8x8.Matrix8x8(address=0x73, busnum=1))
         for m in self.matrix:
-            m.begin()
-          
+	    try :
+                m.begin()
+            except :
+		self.matrix.remove(m)
+		pass
     def is_valid_matrix(self, matrix):
         """Returns True if matrix number is valid, otherwise False."""
         return matrix in xrange(len(self.matrix))     
@@ -87,6 +90,22 @@ class RpiWeather():
             return
         self.clear_disp()
         matrix = 3
+        while num:
+            digit = num % 10
+            self.set_raw64(LED8x8ICONS['{0}'.format(digit)], matrix)
+            num /= 10
+            matrix -= 1
+    
+    def disp_number_q(self, number):
+        """Display number as integer. Valid range is 0 to 99."""
+        num = int(number)
+        self.clear_disp(1)
+        self.clear_disp(2)
+        if num < 0:
+            return
+        if num > 99:
+            num = 99
+        matrix = 2
         while num:
             digit = num % 10
             self.set_raw64(LED8x8ICONS['{0}'.format(digit)], matrix)
