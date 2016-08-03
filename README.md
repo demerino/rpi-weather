@@ -1,7 +1,7 @@
 # rpi-weather
 ![thumbnail](http://caternuson.github.io/rpi-weather/static/rpi-weather-thumb.jpg)<br/>
 Python 2.7 application to get local weather forecast and display results
-via icons on LED 8x8 matrices.
+via icons on LED 8x8 matrices!
 
 # Hardware
 This program should work with any Raspberry Pi although I have only tested it
