@@ -21,8 +21,8 @@ from led8x8icons import LED8x8ICONS
 
 icons = ['SUNNY','RAIN','CLOUD','SHOWERS','SNOW','STORM']
 
-ZIPCODE     = 98109
-NUM_DAYS    = 4
+ZIPCODE     = 94602
+NUM_DAYS    = 1
 NOAA_URL    = "graphical.weather.gov"
 REQ_BASE    = r"/xml/sample_products/browser_interface/ndfdBrowserClientByDay.php?"
 TIME_FORMAT = "12+hourly"
@@ -31,7 +31,7 @@ display = RpiWeather()
 
 def giveup():
     """Action to take if anything bad happens."""
-    for matrix in xrange(4):
+    for matrix in xrange(NUM_DAYS):
         display.set_raw64(LED8x8ICONS['UNKNOWN'],matrix)
     print "Error occured."
     sys.exit(1)
@@ -71,9 +71,9 @@ def make_noaa_request():
     
 def get_noaa_forecast():
     """Return a string of forecast results."""
-    vals = parseString(make_noaa_request()) \
+    noaa_data = make_noaa_request()
+    vals = parseString(noaa_data) \
             .getElementsByTagName("weather-conditions")
-    
     if len(vals) < 2*NUM_DAYS:
         print "Request-Result Mismatch: REQ=%d RES=%d" % (NUM_DAYS,len(vals))
         giveup()
@@ -83,8 +83,14 @@ def get_noaa_forecast():
     else:
         offset = 0
     
-    forecast = [e.getAttribute("weather-summary") for e in vals[offset::2]]
-    
+    forecast = {} 
+    forecast['summary'] = [e.getAttribute("weather-summary") for e in vals[offset::2]]
+    forecast['max_temp'] = 0
+    dom = parseString(noaa_data)
+    for s in dom.getElementsByTagName('temperature'):
+    	if s.getAttribute('type') == 'maximum':
+	    temp = s.getElementsByTagName('value')[0].childNodes[0].nodeValue
+	    forecast['max_temp'] = temp 
     return forecast
     
 def print_forecast(forecast=None):
@@ -102,11 +108,15 @@ def display_forecast(forecast=None):
     """Display forecast as icons on LED 8x8 matrices."""
     if forecast == None:
         return
-    for matrix in xrange(4):
+    for matrix in xrange(NUM_DAYS):
         display.set_raw64(LED8x8ICONS['UNKNOWN'], matrix)    
         for icon in icons:
             if icon in forecast[matrix].encode('ascii','ignore').upper():
                 display.set_raw64(LED8x8ICONS[icon], matrix)
+           
+     
+def display_temp(temp=0):
+    display.disp_temp(temp)
                 
 #-------------------------------------------------------------------------------
 #  M A I N
@@ -115,5 +125,6 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         ZIPCODE = validate_zip(sys.argv[1])
     forecast = get_noaa_forecast()
-    print_forecast(forecast)
-    display_forecast(forecast)
+    print_forecast(forecast['summary'])
+    display_forecast(forecast['summary'])
+    display_temp(forecast['max_temp'])

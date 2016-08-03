@@ -96,7 +96,7 @@ class RpiWeather():
             num /= 10
             matrix -= 1
     
-    def disp_number_q(self, number):
+    def disp_temp(self, number):
         """Display number as integer. Valid range is 0 to 99."""
         num = int(number)
         self.clear_disp(1)
