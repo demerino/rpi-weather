@@ -19,8 +19,8 @@ from led8x8icons import LED8x8ICONS
 display = RpiWeather()
 
 OPENWEATHER_URL    = "api.openweathermap.org"
-REQ_BASE    = r"/data/2.5/forecast?"
-CONFIG_FILE = "weather.cfg"
+REQ_BASE    = r"/data/2.5/weather?"
+CONFIG_FILE = "/home/pi/work/rpi-weather/weather.cfg"
 APIKEY = None
 LAT = None
 LON = None
@@ -40,7 +40,7 @@ ICON_MAP = {
 
 def giveup():
     """Action to take if anything bad happens."""
-    for matrix in xrange(4):
+    for matrix in xrange(1):
         display.set_raw64(LED8x8ICONS['UNKNOWN'],matrix)
     print "Error occured."
     sys.exit(1)
@@ -61,6 +61,7 @@ def make_openweather_request():
     REQUEST = REQ_BASE + "lat={0}&".format(LAT) + \
                         "lon={0}&".format(LON) + \
                         "mode=json&" + \
+                        "units=imperial&" + \
                         "APPID={0}".format(APIKEY)
     try:
         conn = httplib.HTTPConnection(OPENWEATHER_URL)
@@ -75,12 +76,10 @@ def make_openweather_request():
 def get_forecast():
     """Return a list of forecast results."""
     json_data = json.loads(make_openweather_request())
-    daily = json_data['list'][::8]  # crude way of making it daily
-    if len(daily) < 4:
-        giveup
-    forecast = []
-    for day in daily:
-        forecast.append(day['weather'][0]['main'])
+    print json_data
+    forecast = {}
+    forecast['summary'] = [json_data['weather'][0]['main']]
+    forecast['temp'] = json_data['main']['temp']
     return forecast
     
 def print_forecast(forecast=None):
@@ -98,7 +97,7 @@ def display_forecast(forecast=None):
     """Display forecast as icons on LED 8x8 matrices."""
     if forecast == None:
         return
-    for matrix in xrange(4):
+    for matrix in xrange(1):
         try:
             icon = ICON_MAP[forecast[matrix]]
             display.set_raw64(LED8x8ICONS[icon], matrix)
@@ -111,5 +110,7 @@ def display_forecast(forecast=None):
 if __name__ == "__main__":
     read_config(CONFIG_FILE)
     forecast = get_forecast()
-    print_forecast(forecast)
-    display_forecast(forecast)
+    print forecast
+    print_forecast(forecast['summary'])
+    display_forecast(forecast['summary'])
+    display.disp_temp(forecast['temp'])
