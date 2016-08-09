@@ -23,6 +23,7 @@ class RpiWeather():
         for m in self.matrix:
 	    try :
                 m.begin()
+		m.set_brightness(1)
             except :
 		self.matrix.remove(m)
 		pass
@@ -96,7 +97,7 @@ class RpiWeather():
             num /= 10
             matrix -= 1
     
-    def disp_temp(self, number):
+    def disp_temp(self, number, scroll=True):
         """Display number as integer. Valid range is 0 to 99."""
         num = int(number)
         self.clear_disp(1)
@@ -108,6 +109,9 @@ class RpiWeather():
         matrix = 2
         while num:
             digit = num % 10
-            self.set_raw64(LED8x8ICONS['{0}'.format(digit)], matrix)
+            if scroll:
+	        self.scroll_raw64(LED8x8ICONS['{0}'.format(digit)], matrix)
+            else:
+            	self.set_raw64(LED8x8ICONS['{0}'.format(digit)], matrix)
             num /= 10
             matrix -= 1

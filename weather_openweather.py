@@ -100,9 +100,9 @@ def display_forecast(forecast=None):
     for matrix in xrange(1):
         try:
             icon = ICON_MAP[forecast[matrix]]
-            display.set_raw64(LED8x8ICONS[icon], matrix)
+            display.scroll_raw64(LED8x8ICONS[icon], matrix)
         except:
-            display.set_raw64(LED8x8ICONS["UNKNOWN"], matrix)
+            display.scroll_raw64(LED8x8ICONS["UNKNOWN"], matrix)
 
 #-------------------------------------------------------------------------------
 #  M A I N
@@ -112,5 +112,6 @@ if __name__ == "__main__":
     forecast = get_forecast()
     print forecast
     print_forecast(forecast['summary'])
-    display_forecast(forecast['summary'])
+    display.clear_disp(0)
     display.disp_temp(forecast['temp'])
+    display_forecast(forecast['summary'])
