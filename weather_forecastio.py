@@ -20,7 +20,7 @@ display = RpiWeather()
 
 FORECASTIO_URL    = "api.forecast.io"
 REQ_BASE    = r"/forecast/"
-CONFIG_FILE = "weather.cfg"
+CONFIG_FILE = "/home/pi/work/rpi-weather/weather.cfg"
 APIKEY = None
 LAT = None
 LON = None
@@ -28,12 +28,12 @@ LON = None
 ICON_MAP = {
 #   forecast.io icon value              LED 8x8 icon
     "clear-day":                        "SUNNY",
-    "clear-night":                      "UNKNOWN",  # moon?
+    "clear-night":                      "MOON",
     "rain":                             "RAIN",
     "snow":                             "SNOW",
-    "sleet":                            "UNKNOWN",
-    "wind":                             "UNKNOWN",
-    "fog":                              "UNKNOWN",
+    "sleet":                            "STORM",
+    "wind":                             "KANJI_3",
+    "fog":                              "KANJI_8",
     "cloudy":                           "CLOUD",
     "partly-cloudy-day":                "CLOUD",
     "partly-cloudy-night":              "CLOUD",
@@ -41,7 +41,7 @@ ICON_MAP = {
 
 def giveup():
     """Action to take if anything bad happens."""
-    for matrix in xrange(4):
+    for matrix in xrange(1):
         display.set_raw64(LED8x8ICONS['UNKNOWN'],matrix)
     print "Error occured."
     sys.exit(1)
@@ -74,12 +74,10 @@ def make_forecastio_request():
 def get_forecast():
     """Return a list of forecast results."""
     json_data = json.loads(make_forecastio_request())
-    daily = json_data['daily']['data']
-    forecast = []
-    for day in daily:
-        forecast.append(day['icon'])
-    if len(forecast) < 4:
-        giveup()
+   
+    forecast = {}
+    forecast['summary'] = [json_data['currently']['icon']]
+    forecast['temp'] = json_data['currently']['temperature']
     return forecast
     
 def print_forecast(forecast=None):
@@ -97,12 +95,12 @@ def display_forecast(forecast=None):
     """Display forecast as icons on LED 8x8 matrices."""
     if forecast == None:
         return
-    for matrix in xrange(4):
+    for matrix in xrange(1):
         try:
             icon = ICON_MAP[forecast[matrix]]
-            display.set_raw64(LED8x8ICONS[icon], matrix)
+            display.scroll_raw64(LED8x8ICONS[icon], matrix)
         except:
-            display.set_raw64(LED8x8ICONS["UNKNOWN"], matrix)
+            display.scroll_raw64(LED8x8ICONS["UNKNOWN"], matrix)
 
 #-------------------------------------------------------------------------------
 #  M A I N
@@ -110,5 +108,8 @@ def display_forecast(forecast=None):
 if __name__ == "__main__":
     read_config(CONFIG_FILE)
     forecast = get_forecast()
-    print_forecast(forecast)
-    display_forecast(forecast)
+    print forecast
+    print_forecast(forecast['summary'])
+    display.clear_disp(0)
+    display.disp_temp(forecast['temp'])
+    display_forecast(forecast['summary'])
